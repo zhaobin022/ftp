@@ -77,7 +77,28 @@ class FtpServer(SocketServer.BaseRequestHandler):
             response = {'status':False,'msg':'file not exist!!!'}
             return response
 
-
+    def getbrokenfile(self,data):
+        file_name = data.get('file_name')
+        file_size = os.path.getsize(file_name)
+        broken_file_size = data.get('broken_file_size')
+        broken_file_size = int(broken_file_size)
+        print broken_file_size
+        sended = broken_file_size
+        response = {
+            'file_size':file_size,
+        }
+        self.conn.send(json.dumps(response))
+        with open(file_name,'rb') as f:
+            f.seek(broken_file_size)
+            while True:
+                data = f.read(524288)
+                self.conn.send(data)
+                sended += len(data)
+                if sended >= file_size:
+                    break
+            response = self.conn.recv(1024)
+            if response== 'finish':
+                return True,'ok'
     def FileSize(self,path):
         size = 0L
         for root , dirs, files in os.walk(path, True):

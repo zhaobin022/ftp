@@ -77,19 +77,22 @@ class FtpClient(object):
                             if len(command_list) <> 2:
                                 print 'Please input the right command !!!!'
                             else:
-                                data = {
-                                    'action':'getfile',
-                                    'file_name' : command_list[1]
-                                }
-                                self.sk.sendall(json.dumps(data))
-                                response = self.sk.recv(4096)
-                                response = json.loads(response)
-                                if response['status'] == 'ready':
-                                    file_size = response['file_size']
+                                file_name = command_list[1]
+                                broken_file_name = '.%s.tmp' % file_name
+                                if os.path.isfile(broken_file_name):
+                                    broken_file_size = os.path.getsize(broken_file_name)
+                                    data = {
+                                        'action':'getbrokenfile',
+                                        'file_name': file_name,
+                                        'broken_file_size' : broken_file_size
+                                    }
+                                    self.sk.sendall(json.dumps(data))
+                                    response = self.sk.recv(4096)
+                                    response = json.loads(response)
+                                    file_size = response.get('file_size')
                                     file_size = int(file_size)
-                                    self.sk.sendall('begin')
-                                    received = 0
-                                    with open(command_list[1],'wb') as f:
+                                    received = broken_file_size
+                                    with open(broken_file_name,'ab') as f:
                                         while True:
                                             data = self.sk.recv(524288)
                                             f.write(data)
@@ -100,14 +103,49 @@ class FtpClient(object):
                                             time.sleep(0.1)
                                             if received >= file_size:
                                                 break
+
+                                    self.sk.send('finish')
+                                    data = self.sk.recv(1024)
+                                    status,msg = json.loads(data)
+                                    if status:
+                                        os.rename(broken_file_name,file_name)
+                                        print
+                                        print 'get broken file finish !!!!!!!!'
+
+                                else:
+                                    broken_file_name = '.%s.tmp' % file_name
+                                    data = {
+                                        'action':'getfile',
+                                        'file_name' : file_name
+                                    }
+                                    self.sk.sendall(json.dumps(data))
+                                    response = self.sk.recv(4096)
+                                    response = json.loads(response)
+                                    if response['status'] == 'ready':
+                                        file_size = response['file_size']
+                                        file_size = int(file_size)
+                                        self.sk.sendall('begin')
+                                        received = 0
+                                        with open(broken_file_name,'wb') as f:
+                                            while True:
+                                                data = self.sk.recv(524288)
+                                                f.write(data)
+                                                received += len(data)
+                                                percent = float(received)/float(file_size)*100
+                                                percent = int(percent)
+                                                sys.stdout.write('\r'+'#'*percent+'%'+'%d' % percent)
+                                                time.sleep(0.1)
+                                                if received >= file_size:
+                                                    break
                                     self.sk.sendall('finish')
                                     data = self.sk.recv(1024)
                                     status,msg = json.loads(data)
                                     if status:
+                                        os.rename(broken_file_name,file_name)
                                         print
                                         print msg
-                                elif response['status'] == False:
-                                    print response['msg']
+                                    elif response['status'] == False:
+                                        print response['msg']
                         elif command.startswith('put'):
                             command_list = command.split()
                             if len(command_list) <> 2:
