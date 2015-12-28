@@ -14,7 +14,8 @@ class FtpClient(object):
         self.sk.connect(self.ip_port)
 
     def handler(self):
-        while True:
+        login_status = True
+        while login_status:
             username = raw_input("username : ").strip()
             password = raw_input("password : ").strip()
             if username is None or password is None:
@@ -28,11 +29,12 @@ class FtpClient(object):
                 }
                 self.sk.sendall(json.dumps(data))
                 response = self.sk.recv(4096)
-                status , msg = json.loads(response)
-                print status,msg
-                if response:
+                data = json.loads(response)
+                print data['status'],data['msg']
+                if data['status']:
+                    self.home_dir = data['home_dir']
                     while True:
-                        command = raw_input('%s--->' % os.getcwd()).strip()
+                        command = raw_input('%s--->' % self.home_dir).strip()
                         if  command == 'ls' or command == 'dir':
                             command_list = command.split()
                             data = ''
@@ -99,6 +101,8 @@ class FtpClient(object):
                                     if status:
                                         print
                                         print msg
+                                elif response['status'] == False:
+                                    print response['msg']
                         elif command.startswith('put'):
                             command_list = command.split()
                             if len(command_list) <> 2:
@@ -142,7 +146,12 @@ class FtpClient(object):
                                 self.sk.sendall(json.dumps(data))
                                 response = self.sk.recv(1024)
                                 status,obj = json.loads(response)
+                                if status:
+                                    self.home_dir = obj
                                 print obj
+                        elif command.startswith('exit') or command.startswith('quit') :
+                            login_status = False
+                            break
                 else:
                     print msg
 

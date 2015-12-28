@@ -73,6 +73,10 @@ class FtpServer(SocketServer.BaseRequestHandler):
                 data = self.conn.recv(1024)
                 if data == 'finish':
                     return True,'finish'
+        else:
+            response = {'status':False,'msg':'file not exist!!!'}
+            return response
+
 
     def FileSize(self,path):
         size = 0L
@@ -124,6 +128,10 @@ class FtpServer(SocketServer.BaseRequestHandler):
         username = data['username']
         password = data['password']
         status,msg,quota = auth.authenticate(username,password)
+        data = {
+            'status' : status,
+            'msg':msg
+        }
         if status:
             self.username = username
             self.home_dir = os.path.join(settings.USER_BASE,username)
@@ -131,8 +139,9 @@ class FtpServer(SocketServer.BaseRequestHandler):
             if not os.path.exists(self.home_dir):
                 os.makedirs(self.home_dir)
             os.chdir(self.home_dir)
+            data['home_dir'] = self.home_dir
 
-        return status,msg
+        return data
 if __name__ == '__main__':
     server = SocketServer.ThreadingTCPServer(('127.0.0.1',8010),FtpServer)
     server.serve_forever()
