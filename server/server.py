@@ -65,7 +65,7 @@ class FtpServer(SocketServer.BaseRequestHandler):
             if data == 'begin':
                 with open(file_name,'rb') as f:
                     while True:
-                        data = f.read(1024)
+                        data = f.read(524288)
                         if data:
                             self.conn.sendall(data)
                         else:

@@ -1,11 +1,11 @@
-__author__ = 'zhaobin022'
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
 import socket
 import os
-import re
+import sys
 import json
+import time
 
 class FtpClient(object):
     def __init__(self):
@@ -84,16 +84,20 @@ class FtpClient(object):
                                     received = 0
                                     with open(command_list[1],'wb') as f:
                                         while True:
-                                            data = self.sk.recv(1024)
+                                            data = self.sk.recv(524288)
                                             f.write(data)
                                             received += len(data)
+                                            percent = float(received)/float(file_size)*100
+                                            percent = int(percent)
+                                            sys.stdout.write('\r'+'#'*percent+'%'+'%d' % percent)
+                                            time.sleep(0.1)
                                             if received >= file_size:
                                                 break
-
                                     self.sk.sendall('finish')
                                     data = self.sk.recv(1024)
                                     status,msg = json.loads(data)
                                     if status:
+                                        print
                                         print msg
                         elif command.startswith('put'):
                             command_list = command.split()
