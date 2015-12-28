@@ -90,9 +90,6 @@ class FtpServer(SocketServer.BaseRequestHandler):
         file_size = int(data['file_size'])
         total_size = self.FileSize(self.home_dir)
         response = ''
-        print total_size
-        print file_size
-        print self.quota*1024*1024
 
         if (total_size+file_size) >= self.quota *1024*1024:
             response = False,'your reach the quota !!!!!!!'
@@ -103,7 +100,7 @@ class FtpServer(SocketServer.BaseRequestHandler):
         received = 0
         with open(data['file_name'] , 'wb ') as f:
             while True:
-                data = self.conn.recv(1024)
+                data = self.conn.recv(524288)
                 f.write(data)
                 received +=len(data)
                 if received >= file_size:

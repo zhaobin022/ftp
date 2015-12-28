@@ -63,9 +63,14 @@ class FtpClient(object):
                             if status:
                                 print msg
 
-                        elif command == 'lcd':
-                            print 'local dir : %s'  % os.getcwd()
-
+                        elif command.startswith('lcd'):
+                            command_list = command.split()
+                            if len(command_list) == 1:
+                                print 'local dir : %s'  % os.getcwd()
+                            elif len(command_list) == 2:
+                                if os.path.isdir(command_list[1]):
+                                    os.chdir(command_list[1])
+                                    print 'local dir : %s'  % os.getcwd()
 
                         elif command.startswith('get'):
                             command_list = command.split()
@@ -123,13 +128,18 @@ class FtpClient(object):
                                         sended = 0
                                         with open(file_name,'rb') as f:
                                             while True:
-                                                data = f.read(1024)
+                                                data = f.read(524288)
                                                 self.sk.send(data)
                                                 sended += len(data)
+                                                percent = float(sended)/float(file_size)*100
+                                                percent = int(percent)
+                                                sys.stdout.write('\r'+'#'*percent+'%'+'%d' % percent)
+                                                time.sleep(0.1)
                                                 if sended >= file_size:break
                                         response = self.sk.recv(1024)
                                         status,msg = json.loads(response)
                                         if status:
+                                            print
                                             print msg
                                     else:
                                         print msg

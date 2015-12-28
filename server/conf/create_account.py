@@ -5,7 +5,7 @@ import json
 account = {
     'lisi': {
                 'password':'123',
-                'quotation': 50,
+                'quotation': 100,
                 },
     'zhangsan': {
             'password':'456',
