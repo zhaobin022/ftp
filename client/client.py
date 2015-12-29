@@ -198,6 +198,10 @@ class FtpClient(object):
                                     self.home_dir = obj
                                 print obj
                         elif command.startswith('exit') or command.startswith('quit') :
+                            data = {
+                                'action' :  'disconnection',
+                            }
+                            self.sk.sendall(json.dumps(data))
                             login_status = False
                             break
                 else:

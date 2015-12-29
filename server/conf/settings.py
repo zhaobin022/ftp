@@ -6,5 +6,8 @@ ACCOUNT_DB = {
     'filename':'accounts.json',
 }
 
-USER_BASE='%s\%s'% (os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'upload')
+USER_BASE=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'upload')
 BASE_DIR = os.path.dirname(os.path.dirname( os.path.abspath(__file__)))
+
+BIND_HOST='0.0.0.0'
+BIND_PORT=8010
